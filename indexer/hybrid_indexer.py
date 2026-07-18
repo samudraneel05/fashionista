@@ -54,17 +54,17 @@ class HybridIndexer(BaseIndexer):
 
         Returns:
             {image_id: {channel: np.ndarray}}
-            CLIP channels: 512-d, caption channel: 1024-d
+            CLIP channels: 768-d, caption channel: 1024-d
         """
         clip_features = {}
         captions = {}
-        zero_vec = np.zeros(512, dtype=np.float32)
+        zero_vec = np.zeros(self.embedding_dim, dtype=np.float32)
 
         for path in tqdm(image_paths, desc=f"[{self.version_name}] Full feature extraction"):
             img_id = image_id_from_path(path)
             image = np.array(load_image(path))
 
-            # --- CLIP-based embeddings (512-d) ---
+            # --- CLIP-based embeddings (768-d) ---
             v_global = self.clip.encode_image_from_array(image)
 
             # Person detection
@@ -124,9 +124,9 @@ class HybridIndexer(BaseIndexer):
         """Build two FAISS indexes: multi-vector (CLIP channels) + single (caption)."""
         image_ids = sorted(features.keys())
 
-        # Multi-vector index for CLIP channels (512-d)
+        # Multi-vector index for CLIP channels (768-d)
         clip_store = MultiVectorStore(
-            dim=512,
+            dim=self.embedding_dim,
             channel_names=self.CLIP_CHANNELS,
             metric="cosine",
         )
