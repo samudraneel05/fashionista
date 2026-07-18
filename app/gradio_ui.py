@@ -47,7 +47,7 @@ def get_retriever(version: str, index_dir: str, data_dir: str, device: str = Non
 RETRIEVERS: Dict[str, Any] = {}
 
 
-def search_images(query: str, version: str, top_k: int) -> List[gr.GalleryImage]:
+def search_images(query: str, version: str, top_k: int) -> List[tuple]:
     """Search for images and return gallery results."""
     if version not in RETRIEVERS:
         return [], f"Version {version} not loaded."
