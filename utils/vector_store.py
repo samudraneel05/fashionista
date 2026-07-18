@@ -41,6 +41,7 @@ class VectorStore:
 
         if self.metric == "cosine":
             # Normalize embeddings for cosine similarity
+            embeddings = np.ascontiguousarray(embeddings, dtype=np.float32)
             faiss.normalize_L2(embeddings)
             self.index = faiss.IndexHNSWFlat(self.dim, m, faiss.METRIC_INNER_PRODUCT)
         else:
@@ -68,10 +69,11 @@ class VectorStore:
             query_vec = query_vec.reshape(1, -1)
 
         if self.metric == "cosine":
+            query_vec = np.ascontiguousarray(query_vec, dtype=np.float32)
             faiss.normalize_L2(query_vec)
 
         self.index.hnsw.efSearch = ef_search
-        scores, indices = self.index.search(query_vec.astype(np.float32), top_k)
+        scores, indices = self.index.search(np.ascontiguousarray(query_vec, dtype=np.float32), top_k)
 
         results = []
         for score, idx in zip(scores[0], indices[0]):
