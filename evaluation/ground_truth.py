@@ -303,6 +303,8 @@ class GroundTruthGenerator:
         self.captions: Dict[str, Any] = {}
         self.annotation_index: Optional[FashionpediaAnnotationIndex] = None
         self.matcher: Optional[QueryAnnotationMatcher] = None
+        self._caption_encoder = None
+        self._caption_embeddings: Dict[str, Any] = {}
 
         if annotations_path and Path(annotations_path).exists():
             self.annotation_index = FashionpediaAnnotationIndex(annotations_path)
@@ -311,6 +313,35 @@ class GroundTruthGenerator:
         if captions_path and Path(captions_path).exists():
             with open(captions_path, "r") as f:
                 self.captions = json.load(f)
+
+    def _ensure_caption_embeddings(self) -> None:
+        """Lazily load BGE encoder and embed all captions once.
+
+        VLM captions describe runway/portrait content (e.g. "model walks the
+        runway...") and rarely contain literal query words like "office" or
+        "business". Word-overlap (Jaccard) similarity therefore fails almost
+        universally for contextual/style queries. Semantic embedding
+        similarity via BGE (same encoder used by the V3 retriever) captures
+        paraphrase-level relevance instead.
+        """
+        if self._caption_encoder is None:
+            from sentence_transformers import SentenceTransformer
+            self._caption_encoder = SentenceTransformer("BAAI/bge-large-en-v1.5")
+
+        missing = [
+            img_id for img_id in self.captions
+            if img_id not in self._caption_embeddings
+        ]
+        if missing:
+            texts = [
+                self.captions[img_id].get("combined", self.captions[img_id].get("blip", ""))
+                for img_id in missing
+            ]
+            embs = self._caption_encoder.encode(
+                texts, normalize_embeddings=True, batch_size=64, show_progress_bar=False
+            )
+            for img_id, emb in zip(missing, embs):
+                self._caption_embeddings[img_id] = emb
 
     def get_annotation_based_gt(self, query_category: str, query: str) -> Set[str]:
         """Get ground-truth image IDs using Fashionpedia annotations.
@@ -361,38 +392,33 @@ class GroundTruthGenerator:
         self,
         query: str,
         candidate_ids: List[str],
-        threshold: float = 0.12,
+        threshold: float = 0.55,
     ) -> Set[str]:
-        """Get ground-truth using VLM caption similarity.
+        """Get ground-truth using VLM caption semantic similarity.
 
-        For each candidate image, compute text similarity between the query
-        and the image's VLM caption. Images above threshold are relevant.
+        Encodes the query and all candidate captions with BGE and computes
+        cosine similarity. Word-overlap (Jaccard) was tried first but fails
+        almost universally here: VLM captions describe runway/portrait scenes
+        and rarely contain literal query words like "office" (only 9/3200
+        captions mention it), so max achievable Jaccard similarity was ~0.03.
+        Semantic embeddings capture paraphrase-level relevance instead.
         """
-        if not self.captions:
+        if not self.captions or not candidate_ids:
             return set()
 
-        query_words = set(re.findall(r'[a-z]+', query.lower()))
-        stop_words = {"a", "an", "the", "in", "on", "at", "for", "of", "with",
-                      "and", "or", "to", "is", "are", "wearing", "person",
-                      "someone", "outfit", "setting", "inside"}
-        query_words -= stop_words
+        import numpy as np
+        self._ensure_caption_embeddings()
 
-        if not query_words:
-            return set()
+        query_vec = self._caption_encoder.encode(
+            [query], normalize_embeddings=True
+        )[0]
 
         relevant = set()
         for img_id in candidate_ids:
-            if img_id not in self.captions:
+            emb = self._caption_embeddings.get(img_id)
+            if emb is None:
                 continue
-
-            caption_data = self.captions[img_id]
-            caption = caption_data.get("combined", caption_data.get("blip", "")).lower()
-            caption_words = set(re.findall(r'[a-z]+', caption))
-
-            intersection = len(query_words & caption_words)
-            union = len(query_words | caption_words)
-            similarity = intersection / union if union > 0 else 0
-
+            similarity = float(np.dot(query_vec, emb))
             if similarity >= threshold:
                 relevant.add(img_id)
 
