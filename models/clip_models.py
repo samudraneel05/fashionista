@@ -110,11 +110,11 @@ class MarqoFashionSigLIPWrapper:
 
         import open_clip
         self.model, _, self.preprocess = open_clip.create_model_and_transforms(
-            "ViT-B-16-SigLIP", pretrained="hf-hub:Marqo/marqo-fashionSigLIP"
+            "hf-hub:Marqo/marqo-fashionSigLIP"
         )
         self.model = self.model.to(device)
         self.model.eval()
-        self.tokenizer = open_clip.get_tokenizer("ViT-B-16-SigLIP")
+        self.tokenizer = open_clip.get_tokenizer("hf-hub:Marqo/marqo-fashionSigLIP")
         self.embedding_dim = 512
 
     def encode_images(self, image_paths: List[str], batch_size: int = 32) -> np.ndarray:
