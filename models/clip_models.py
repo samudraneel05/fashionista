@@ -109,7 +109,9 @@ class MarqoFashionSigLIPWrapper:
         self.model_name = "Marqo/marqo-fashionSigLIP"
 
         from transformers import AutoModel, AutoProcessor
-        self.model = AutoModel.from_pretrained(self.model_name, trust_remote_code=True)
+        self.model = AutoModel.from_pretrained(
+            self.model_name, trust_remote_code=True, low_cpu_mem_usage=False
+        )
         self.model = self.model.to(device)
         self.model.eval()
         self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True)
