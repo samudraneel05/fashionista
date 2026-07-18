@@ -338,6 +338,11 @@ class GroundTruthGenerator:
             for attr in matched_attrs:
                 attr_images |= self.annotation_index.get_images_with_attribute(attr)
             relevant = cat_images & attr_images
+            # If intersection is too small (< 5), fall back to category-only match
+            # This handles cases where attribute matching is overly restrictive
+            # (e.g., "raincoat" attribute matches only 1 image)
+            if len(relevant) < 5 and cat_images:
+                relevant = cat_images
         elif matched_cats:
             relevant = set()
             for cat in matched_cats:
@@ -356,7 +361,7 @@ class GroundTruthGenerator:
         self,
         query: str,
         candidate_ids: List[str],
-        threshold: float = 0.4,
+        threshold: float = 0.12,
     ) -> Set[str]:
         """Get ground-truth using VLM caption similarity.
 
@@ -397,7 +402,7 @@ class GroundTruthGenerator:
         self,
         query: str,
         candidate_ids: List[str],
-        threshold: float = 7.0,
+        threshold: float = 5.0,
     ) -> Set[str]:
         """Get ground-truth using LLM-based relevance judgment.
 
