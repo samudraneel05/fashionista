@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data directories (large files)
+data/
+*.zip
+*.npy
+*.pt
+*.faiss
+*.pkl
+
+# Index artifacts
+indexes/
+embeddings/
+captions/
+
+# Dataset
+test/
