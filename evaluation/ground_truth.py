@@ -141,6 +141,23 @@ class FashionpediaAnnotationIndex:
             "categories": set(), "attributes": set(), "attribute_supercats": set(),
         })
 
+    def to_filename_stems(self, image_ids: Set[str]) -> Set[str]:
+        """Convert numeric Fashionpedia image IDs to filename stems.
+
+        Retrievers use filename stems (e.g. 'e14733841b04c64e75789a91fbe549b3')
+        as image IDs, but annotations use numeric IDs (e.g. '13297').
+        This method bridges the gap.
+        """
+        from pathlib import Path
+        result = set()
+        for img_id in image_ids:
+            file_name = self.image_file_names.get(str(img_id), "")
+            if file_name:
+                result.add(Path(file_name).stem)
+            else:
+                result.add(str(img_id))
+        return result
+
 
 class QueryAnnotationMatcher:
     """Maps natural language query terms to Fashionpedia annotation names.
@@ -333,7 +350,7 @@ class GroundTruthGenerator:
             relevant = set()
 
         print(f"    Found {len(relevant)} relevant images")
-        return relevant
+        return self.annotation_index.to_filename_stems(relevant)
 
     def get_caption_based_gt(
         self,
