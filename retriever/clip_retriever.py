@@ -17,7 +17,10 @@ class CLIPRetriever(BaseRetriever):
     def __init__(self, version_name: str, index_dir: str, data_dir: str, device: str = None):
         super().__init__(version_name=version_name, index_dir=index_dir, data_dir=data_dir)
         self.device = device
-        self.store = VectorStore(dim=512, metric="cosine")
+        # V0a uses OpenAI CLIP (512-dim), V0b uses Marqo FashionSigLIP (768-dim)
+        # VectorStore.load() will overwrite this from meta.json, so this is just a placeholder
+        clip_dim = 512 if version_name == "v0a" else 768
+        self.store = VectorStore(dim=clip_dim, metric="cosine")
         self.store.load(str(Path(index_dir) / "global"))
 
         # Load the appropriate model for text encoding

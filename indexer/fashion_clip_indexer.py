@@ -20,7 +20,7 @@ class FashionCLIPIndexer(BaseIndexer):
     """V0b: Marqo-FashionSigLIP single-vector indexer."""
 
     def __init__(self, data_dir: str, output_dir: str, device: str = None):
-        super().__init__(version_name="v0b", embedding_dim=512, data_dir=data_dir, output_dir=output_dir)
+        super().__init__(version_name="v0b", embedding_dim=768, data_dir=data_dir, output_dir=output_dir)
         self.clip = MarqoFashionSigLIPWrapper(device=device)
 
     def extract_features(self, image_paths: List[str], batch_size: int = 32) -> Dict[str, np.ndarray]:

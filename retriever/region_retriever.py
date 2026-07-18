@@ -54,7 +54,7 @@ class RegionRetriever(BaseRetriever):
         super().__init__(version_name="v2", index_dir=index_dir, data_dir=data_dir)
         self.encoder = MarqoFashionSigLIPWrapper(device=device)
         self.store = MultiVectorStore(
-            dim=512,
+            dim=768,
             channel_names=["global", "scene", "upper", "lower", "dress",
                            "headwear", "footwear", "accessory"],
             metric="cosine",

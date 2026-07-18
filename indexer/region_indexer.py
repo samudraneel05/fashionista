@@ -32,7 +32,7 @@ class RegionIndexer(BaseIndexer):
     ALL_CHANNELS = BASE_CHANNELS + REGION_CHANNELS
 
     def __init__(self, data_dir: str, output_dir: str, device: str = None):
-        super().__init__(version_name="v2", embedding_dim=512, data_dir=data_dir, output_dir=output_dir)
+        super().__init__(version_name="v2", embedding_dim=768, data_dir=data_dir, output_dir=output_dir)
         self.clip = MarqoFashionSigLIPWrapper(device=device)
         self.segmenter = GarmentSegmenter(device=device)
         self.detector = PersonDetector(conf_threshold=0.3, iou_threshold=0.5)

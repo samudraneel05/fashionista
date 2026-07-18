@@ -35,7 +35,7 @@ class MultiVectorRetriever(BaseRetriever):
     def __init__(self, index_dir: str, data_dir: str, device: str = None):
         super().__init__(version_name="v1", index_dir=index_dir, data_dir=data_dir)
         self.encoder = MarqoFashionSigLIPWrapper(device=device)
-        self.store = MultiVectorStore(dim=512, channel_names=["global", "scene", "action"], metric="cosine")
+        self.store = MultiVectorStore(dim=768, channel_names=["global", "scene", "action"], metric="cosine")
         self.store.load(index_dir)
         self.parser = QueryParser()
 

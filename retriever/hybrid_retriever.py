@@ -84,7 +84,7 @@ class HybridRetriever(BaseRetriever):
 
         # Load multi-vector CLIP index
         self.clip_store = MultiVectorStore(
-            dim=512,
+            dim=768,
             channel_names=["global", "scene", "action", "region_upper", "region_lower"],
             metric="cosine",
         )
