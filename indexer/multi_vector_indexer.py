@@ -5,7 +5,6 @@ Generates 3 embeddings per image:
 - v_scene: CLIP on image with humans masked out (pure environment)
 - v_action: CLIP on cropped person (fashion-focused)
 
-Inspired by FashionGlance (previous intern, selected).
 Uses YOLOv8-nano for person detection, Marqo-FashionSigLIP for embeddings.
 """
 
